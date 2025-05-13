@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
+from .filters import EmployeeFilter
+
 from .models import (
     Department, Designation, Employee, EmployeeDocument,
     EmployeeEducation, EmployeeExperience, EmployeeSkill, EmployeeTimeline
@@ -43,7 +45,7 @@ class DesignationViewSet(viewsets.ModelViewSet):
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active', 'department', 'designation', 'employment_status', 'employment_type']
+    filterset_class = EmployeeFilter
     search_fields = ['first_name', 'last_name', 'email', 'employee_id', 'skills']
     ordering_fields = ['first_name', 'last_name', 'date_of_joining', 'created_at']
     # permission_classes = [permissions.IsAuthenticated]
