@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'employees',
     'leave',
     'documents',
-    'onboarding',
+    'boarding',
     'analytics',
 ]
 

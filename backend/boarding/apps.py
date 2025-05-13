@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class OnboardingConfig(AppConfig):
+class BoardingConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'onboarding'
+    name = 'boarding'

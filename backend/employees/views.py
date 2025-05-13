@@ -7,12 +7,12 @@ from django.db.models import Q
 from .filters import EmployeeFilter
 
 from .models import (
-    Department, Designation, Employee, EmployeeDocument,
-    EmployeeEducation, EmployeeExperience, EmployeeSkill, EmployeeTimeline
+    Department, Designation, Employee,EmployeeEducation, 
+    EmployeeExperience, EmployeeSkill, EmployeeTimeline
 )
 from .serializers import (
     DepartmentSerializer, DesignationSerializer, EmployeeListSerializer,
-    EmployeeDetailSerializer, EmployeeCreateUpdateSerializer, EmployeeDocumentSerializer,
+    EmployeeDetailSerializer, EmployeeCreateUpdateSerializer,
     EmployeeEducationSerializer, EmployeeExperienceSerializer, EmployeeSkillSerializer,
     EmployeeTimelineSerializer
 )
@@ -57,12 +57,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             return EmployeeCreateUpdateSerializer
         return EmployeeDetailSerializer
 
-    @action(detail=True, methods=['get'])
-    def documents(self, request, pk=None):
-        employee = self.get_object()
-        documents = employee.documents.all()
-        serializer = EmployeeDocumentSerializer(documents, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=['get'])
+    # def documents(self, request, pk=None):
+    #     employee = self.get_object()
+    #     documents = employee.documents.all()
+    #     serializer = EmployeeDocumentSerializer(documents, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def education(self, request, pk=None):
@@ -114,30 +114,30 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response([])
 
-class EmployeeDocumentViewSet(viewsets.ModelViewSet):
-    queryset = EmployeeDocument.objects.all()
-    serializer_class = EmployeeDocumentSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['employee', 'document_type', 'is_verified']
-    search_fields = ['title', 'description']
-    ordering_fields = ['title', 'created_at', 'expiry_date']
-    # permission_classes = [permissions.IsAuthenticated]
+# class EmployeeDocumentViewSet(viewsets.ModelViewSet):
+#     queryset = EmployeeDocument.objects.all()
+#     serializer_class = EmployeeDocumentSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+#     filterset_fields = ['employee', 'document_type', 'is_verified']
+#     search_fields = ['title', 'description']
+#     ordering_fields = ['title', 'created_at', 'expiry_date']
+#     # permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
-    def expiring_soon(self, request):
-        from django.utils import timezone
-        from datetime import timedelta
+#     @action(detail=False, methods=['get'])
+#     def expiring_soon(self, request):
+#         from django.utils import timezone
+#         from datetime import timedelta
         
-        days = int(request.query_params.get('days', 30))
-        future_date = timezone.now().date() + timedelta(days=days)
+#         days = int(request.query_params.get('days', 30))
+#         future_date = timezone.now().date() + timedelta(days=days)
         
-        documents = EmployeeDocument.objects.filter(
-            expiry_date__isnull=False,
-            expiry_date__lte=future_date,
-            expiry_date__gte=timezone.now().date()
-        )
-        serializer = self.get_serializer(documents, many=True)
-        return Response(serializer.data)
+#         documents = EmployeeDocument.objects.filter(
+#             expiry_date__isnull=False,
+#             expiry_date__lte=future_date,
+#             expiry_date__gte=timezone.now().date()
+#         )
+#         serializer = self.get_serializer(documents, many=True)
+#         return Response(serializer.data)
 
 class EmployeeEducationViewSet(viewsets.ModelViewSet):
     queryset = EmployeeEducation.objects.all()
