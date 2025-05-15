@@ -3,7 +3,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    Department, Designation, Employee, EmployeeDocument,
+    Department, Designation, Employee,
     EmployeeEducation, EmployeeExperience, EmployeeSkill, EmployeeTimeline
 )
 
@@ -24,10 +24,6 @@ class DesignationSerializer(serializers.ModelSerializer):
         model = Designation
         fields = '__all__'
 
-class EmployeeDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmployeeDocument
-        fields = '__all__'
 
 class EmployeeEducationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,7 +61,6 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
     department_name = serializers.ReadOnlyField(source='department.name')
     designation_title = serializers.ReadOnlyField(source='designation.title')
     reporting_manager_name = serializers.ReadOnlyField(source='reporting_manager.full_name')
-    documents = EmployeeDocumentSerializer(many=True, read_only=True)
     education = EmployeeEducationSerializer(many=True, read_only=True)
     experiences = EmployeeExperienceSerializer(many=True, read_only=True)
     skill_list = EmployeeSkillSerializer(many=True, read_only=True)
