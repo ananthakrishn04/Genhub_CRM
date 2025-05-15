@@ -35,7 +35,7 @@ urlpatterns = [
     path('api/employees/', include('employees.urls')),
     # path('api/leave/', include('leave.urls')),
     # path('api/documents/', include('documents.urls')),
-    # path('api/onboarding/', include('onboarding.urls')),
+    path('api/boarding/', include('boarding.urls')),
     # path('api/analytics/', include('analytics.urls')),
 ]
 
