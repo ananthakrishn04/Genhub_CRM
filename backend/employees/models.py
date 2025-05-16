@@ -98,35 +98,6 @@ class Employee(models.Model):
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
 
-# class EmployeeDocument(models.Model):
-#     DOCUMENT_TYPES = (
-#         ('ID', 'ID Proof'),
-#         ('EDU', 'Educational Certificate'),
-#         ('EXP', 'Experience Certificate'),
-#         ('OTH', 'Other'),
-#     )
-    
-#     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='documents')
-#     document_type = models.CharField(max_length=3, choices=DOCUMENT_TYPES)
-#     title = models.CharField(max_length=200)
-#     description = models.TextField(null=True, blank=True)
-#     file = models.FileField(upload_to='employee_documents/')
-#     issue_date = models.DateField(null=True, blank=True)
-#     expiry_date = models.DateField(null=True, blank=True)
-#     is_verified = models.BooleanField(default=False)
-#     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_documents')
-#     verification_date = models.DateTimeField(null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return f"{self.employee.full_name} - {self.title}"
-    
-#     @property
-#     def is_expired(self):
-#         if self.expiry_date:
-#             return self.expiry_date < timezone.now().date()
-#         return False
 
 class EmployeeEducation(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='education')

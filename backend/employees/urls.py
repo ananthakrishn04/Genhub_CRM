@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    DepartmentViewSet, DesignationViewSet, EmployeeViewSet, 
-    EmployeeEducationViewSet, 
+    DepartmentViewSet, DesignationViewSet, 
+    EmployeeViewSet, EmployeeEducationViewSet, 
     EmployeeExperienceViewSet, EmployeeSkillViewSet, 
     EmployeeTimelineViewSet
 )
