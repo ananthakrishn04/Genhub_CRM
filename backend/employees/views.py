@@ -24,7 +24,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'parent_department']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     @action(detail=True, methods=['get'])
     def employees(self, request, pk=None):
@@ -40,7 +40,7 @@ class DesignationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'department']
     search_fields = ['title', 'description']
     ordering_fields = ['title', 'department__name', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
@@ -48,7 +48,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     filterset_class = EmployeeFilter
     search_fields = ['first_name', 'last_name', 'email', 'employee_id', 'skills']
     ordering_fields = ['first_name', 'last_name', 'date_of_joining', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -146,7 +146,7 @@ class EmployeeEducationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'is_current']
     search_fields = ['institution', 'degree', 'field_of_study']
     ordering_fields = ['start_date', 'end_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeExperienceViewSet(viewsets.ModelViewSet):
     queryset = EmployeeExperience.objects.all()
@@ -155,7 +155,7 @@ class EmployeeExperienceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'is_current']
     search_fields = ['company', 'title', 'description']
     ordering_fields = ['start_date', 'end_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeSkillViewSet(viewsets.ModelViewSet):
     queryset = EmployeeSkill.objects.all()
@@ -164,7 +164,7 @@ class EmployeeSkillViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'proficiency_level']
     search_fields = ['skill']
     ordering_fields = ['skill', 'proficiency_level']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeTimelineViewSet(viewsets.ModelViewSet):
     queryset = EmployeeTimeline.objects.all()
@@ -173,4 +173,4 @@ class EmployeeTimelineViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'event_type']
     search_fields = ['title', 'description']
     ordering_fields = ['event_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]

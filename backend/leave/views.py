@@ -22,6 +22,7 @@ class LeaveTypeViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'is_paid', 'requires_approval']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
+    permission_classes = [permissions.IsAuthenticated]
 
 class LeavePolicyViewSet(viewsets.ModelViewSet):
     queryset = LeavePolicy.objects.all()
@@ -62,6 +63,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'leave_type', 'status', 'start_date', 'end_date']
     search_fields = ['employee__first_name', 'employee__last_name', 'reason']
     ordering_fields = ['start_date', 'end_date', 'created_at', 'status']
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'list':
