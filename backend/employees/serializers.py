@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from .models import (
     Department, Designation, Employee, EmployeeEducation, 
-    EmployeeExperience, EmployeeSkill, EmployeeTimeline
+    EmployeeExperience, EmployeeSkill, EmployeeTimeline, EmployeeAttendance, TaskTimeLog
 )
+
+from boarding.models import Task
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,3 +74,59 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = '__all__'
+
+class EmployeeAttendanceSerializer(serializers.ModelSerializer):
+    employee_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EmployeeAttendance
+        fields = '__all__'
+        read_only_fields = ('total_hours',)
+
+    def get_employee_name(self, obj):
+        return obj.employee.full_name
+
+class TaskSerializer(serializers.ModelSerializer):
+    assigned_to_name = serializers.SerializerMethodField()
+    assigned_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_assigned_to_name(self, obj):
+        return obj.assigned_to.full_name
+
+    def get_assigned_by_name(self, obj):
+        return obj.assigned_by.full_name
+
+class TaskTimeLogSerializer(serializers.ModelSerializer):
+    employee_name = serializers.SerializerMethodField()
+    task_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskTimeLog
+        fields = '__all__'
+        read_only_fields = ('hours_spent',)
+
+    def get_employee_name(self, obj):
+        return obj.employee.full_name
+
+    def get_task_name(self, obj):
+        return obj.task.name
+    
+
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        user = authenticate(username=username, password=password)
+
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+        
+        return user
