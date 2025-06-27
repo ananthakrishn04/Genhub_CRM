@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import transaction
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 
 from .models import (
     ProcessTemplate, TaskTemplate, Process, 
@@ -30,7 +32,7 @@ class ProcessTemplateViewSet(viewsets.ModelViewSet):
         return ProcessTemplateDetailSerializer
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=self.request.user.employee_profile)
     
     @action(detail=True, methods=['post'])
     def clone(self, request, pk=None):
@@ -42,7 +44,7 @@ class ProcessTemplateViewSet(viewsets.ModelViewSet):
                 process_type=original_template.process_type,
                 description=original_template.description,
                 is_active=original_template.is_active,
-                created_by=request.user
+                created_by=request.user.employee_profile
             )
             
             # Clone the departments
@@ -102,7 +104,8 @@ class ProcessViewSet(viewsets.ModelViewSet):
         return ProcessDetailSerializer
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        # employee = Employee.objects.get(pk=request.data.get('employee'))
+        serializer.save(created_by=self.request.user.employee_profile)
     
     @action(detail=True, methods=['post'])
     def start_process(self, request, pk=None):
@@ -214,7 +217,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.status = 'completed'
         task.completion_date = timezone.now().date()
         task.completion_notes = notes
-        task.completed_by = request.user
+        task.completed_by = request.user.employee_profile
         task.save()
         
         # Check for dependent tasks that can now be started
@@ -235,12 +238,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         try:
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            assignee = User.objects.get(pk=assignee_id)
+            assignee = Employee.objects.get(pk=assignee_id)
+
+            # assignee = User.objects.get(employee_profile=assignee_id)
+
             task.assignee = assignee
             task.save()
             return Response({"message": "Task assigned successfully"}, status=status.HTTP_200_OK)
+        
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class EquipmentViewSet(viewsets.ModelViewSet):

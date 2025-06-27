@@ -177,3 +177,90 @@ class EmployeeTimeline(models.Model):
     
     class Meta:
         ordering = ['-event_date']
+
+class EmployeeAttendance(models.Model):
+    ATTENDANCE_STATUS_CHOICES = (
+        ('PRESENT', 'Present'),
+        ('ABSENT', 'Absent'),
+        ('LATE', 'Late'),
+        ('HALF_DAY', 'Half Day'),
+        ('LEAVE', 'On Leave'),
+    )
+
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_records')
+    date = models.DateField()
+    check_in = models.DateTimeField(null=True, blank=True)
+    check_out = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=ATTENDANCE_STATUS_CHOICES, default='PRESENT')
+    total_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.date} ({self.status})"
+
+    class Meta:
+        unique_together = ('employee', 'date')
+        ordering = ['-date']
+
+    def calculate_total_hours(self):
+        if self.check_in and self.check_out:
+            duration = self.check_out - self.check_in
+            hours = duration.total_seconds() / 3600
+            self.total_hours = round(hours, 2)
+            self.save()
+
+# class Task(models.Model):
+#     STATUS_CHOICES = (
+#         ('PENDING', 'Pending'),
+#         ('IN_PROGRESS', 'In Progress'),
+#         ('COMPLETED', 'Completed'),
+#         ('ON_HOLD', 'On Hold'),
+#     )
+
+#     PRIORITY_CHOICES = (
+#         ('LOW', 'Low'),
+#         ('MEDIUM', 'Medium'),
+#         ('HIGH', 'High'),
+#         ('URGENT', 'Urgent'),
+#     )
+
+#     title = models.CharField(max_length=200)
+#     description = models.TextField()
+#     assigned_to = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='assigned_tasks')
+#     assigned_by = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='created_tasks')
+#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+#     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
+#     due_date = models.DateField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return f"{self.title} - {self.assigned_to.full_name}"
+
+#     class Meta:
+#         ordering = ['-due_date', 'priority']
+
+class TaskTimeLog(models.Model):
+    task = models.ForeignKey('boarding.Task', on_delete=models.CASCADE, related_name='time_logs')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='task_time_logs')
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField(null=True, blank=True)
+    hours_spent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.task.name} - {self.employee.full_name} ({self.start_time.date()})"
+
+    class Meta:
+        ordering = ['-start_time']
+
+    def calculate_hours_spent(self):
+        if self.end_time:
+            duration = self.end_time - self.start_time
+            hours = duration.total_seconds() / 3600
+            self.hours_spent = round(hours, 2)
+            self.save()

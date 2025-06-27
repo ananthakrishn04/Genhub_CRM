@@ -67,7 +67,7 @@ class ProcessListSerializer(serializers.ModelSerializer):
         ]
     
     def get_task_count(self, obj):
-        return obj.tasks.count()
+        return obj.process_tasks.count()
 
 
 class ProcessDetailSerializer(serializers.ModelSerializer):

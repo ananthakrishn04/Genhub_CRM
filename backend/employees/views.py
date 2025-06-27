@@ -3,18 +3,28 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from django.utils import timezone
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 
 from .filters import EmployeeFilter
 
 from .models import (
     Department, Designation, Employee,EmployeeEducation, 
-    EmployeeExperience, EmployeeSkill, EmployeeTimeline
+    EmployeeExperience, EmployeeSkill, EmployeeTimeline,
+    EmployeeAttendance, TaskTimeLog
 )
+
+from boarding.models import Task
+
 from .serializers import (
     DepartmentSerializer, DesignationSerializer, EmployeeListSerializer,
     EmployeeDetailSerializer, EmployeeCreateUpdateSerializer,
     EmployeeEducationSerializer, EmployeeExperienceSerializer, EmployeeSkillSerializer,
-    EmployeeTimelineSerializer
+    EmployeeTimelineSerializer, EmployeeAttendanceSerializer, TaskSerializer, TaskTimeLogSerializer,
+    UserLoginSerializer
 )
 
 class DepartmentViewSet(viewsets.ModelViewSet):
@@ -24,7 +34,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'parent_department']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     @action(detail=True, methods=['get'])
     def employees(self, request, pk=None):
@@ -40,7 +50,7 @@ class DesignationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'department']
     search_fields = ['title', 'description']
     ordering_fields = ['title', 'department__name', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
@@ -48,7 +58,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     filterset_class = EmployeeFilter
     search_fields = ['first_name', 'last_name', 'email', 'employee_id', 'skills']
     ordering_fields = ['first_name', 'last_name', 'date_of_joining', 'created_at']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -146,7 +156,7 @@ class EmployeeEducationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'is_current']
     search_fields = ['institution', 'degree', 'field_of_study']
     ordering_fields = ['start_date', 'end_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeExperienceViewSet(viewsets.ModelViewSet):
     queryset = EmployeeExperience.objects.all()
@@ -155,7 +165,7 @@ class EmployeeExperienceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'is_current']
     search_fields = ['company', 'title', 'description']
     ordering_fields = ['start_date', 'end_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeSkillViewSet(viewsets.ModelViewSet):
     queryset = EmployeeSkill.objects.all()
@@ -164,7 +174,7 @@ class EmployeeSkillViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'proficiency_level']
     search_fields = ['skill']
     ordering_fields = ['skill', 'proficiency_level']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
 class EmployeeTimelineViewSet(viewsets.ModelViewSet):
     queryset = EmployeeTimeline.objects.all()
@@ -173,4 +183,174 @@ class EmployeeTimelineViewSet(viewsets.ModelViewSet):
     filterset_fields = ['employee', 'event_type']
     search_fields = ['title', 'description']
     ordering_fields = ['event_date']
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+
+class EmployeeAttendanceViewSet(viewsets.ModelViewSet):
+    queryset = EmployeeAttendance.objects.all()
+    serializer_class = EmployeeAttendanceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        employee_id = self.request.query_params.get('employee_id')
+        date = self.request.query_params.get('date')
+        
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        if date:
+            queryset = queryset.filter(date=date)
+            
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    @action(detail=False, methods=['post'])
+    def check_in(self, request):
+        employee = request.user.employee_profile
+        today = timezone.now().date()
+        
+        attendance, created = EmployeeAttendance.objects.get_or_create(
+            employee=employee,
+            date=today,
+            defaults={'check_in': timezone.now()}
+        )
+        
+        if not created and not attendance.check_in:
+            attendance.check_in = timezone.now()
+            attendance.save()
+            
+        serializer = self.get_serializer(attendance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def check_out(self, request):
+        employee = request.user.employee_profile
+        today = timezone.now().date()
+        
+        try:
+            attendance = EmployeeAttendance.objects.get(
+                employee=employee,
+                date=today
+            )
+            attendance.check_out = timezone.now()
+            attendance.calculate_total_hours()
+            attendance.save()
+            
+            serializer = self.get_serializer(attendance)
+            return Response(serializer.data)
+        except EmployeeAttendance.DoesNotExist:
+            return Response(
+                {'error': 'No attendance record found for today'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        assigned_to = self.request.query_params.get('assigned_to')
+        status = self.request.query_params.get('status')
+        
+        if assigned_to:
+            queryset = queryset.filter(assigned_to_id=assigned_to)
+        if status:
+            queryset = queryset.filter(status=status)
+            
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(assigned_by=self.request.user.employee_profile)
+
+class TaskTimeLogViewSet(viewsets.ModelViewSet):
+    queryset = TaskTimeLog.objects.all()
+    serializer_class = TaskTimeLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        employee_id = self.request.query_params.get('employee_id')
+        task_id = self.request.query_params.get('task_id')
+        date = self.request.query_params.get('date')
+        
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        if task_id:
+            queryset = queryset.filter(task_id=task_id)
+        if date:
+            queryset = queryset.filter(start_time__date=date)
+            
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(employee=self.request.user.employee_profile)
+
+    @action(detail=False, methods=['post'])
+    def start_time(self, request):
+        task_id = request.data.get('task_id')
+        try:
+            task = Task.objects.get(id=task_id)
+            time_log = TaskTimeLog.objects.create(
+                task=task,
+                employee=request.user.employee_profile,
+                start_time=timezone.now()
+            )
+            serializer = self.get_serializer(time_log)
+            return Response(serializer.data)
+        except Task.DoesNotExist:
+            return Response(
+                {'error': 'Task not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'])
+    def end_time(self, request, pk=None):
+        time_log = self.get_object()
+        if not time_log.end_time:
+            time_log.end_time = timezone.now()
+            time_log.calculate_hours_spent()
+            time_log.save()
+            
+            serializer = self.get_serializer(time_log)
+            return Response(serializer.data)
+        return Response(
+            {'error': 'Time log already ended'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserLoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data
+
+        if user is not None:
+            try:
+                employee = user.employee_profile
+                employee_id = str(employee.employee_id)
+
+                refresh = RefreshToken.for_user(user)
+
+                # Determine roleel
+                if user.groups.exists():
+                    role = user.groups.first().name
+                else:
+                    role = 'employee'
+
+                return Response({
+                    'access_token': str(refresh.access_token),
+                    'refresh_token': str(refresh),
+                    'employee_id': employee_id,
+                    'role': role,
+                })
+            except Exception:
+                return Response({'detail': "Access denied. Please use the appropriate login endpoint."}, status=status.HTTP_403_FORBIDDEN)
+        
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
