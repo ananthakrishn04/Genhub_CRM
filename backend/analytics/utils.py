@@ -62,11 +62,11 @@ class ReportGenerator:
                 elif col == 'department':
                     row[col] = employee.department.name if employee.department else ''
                 elif col == 'designation':
-                    row[col] = employee.designation.name if employee.designation else ''
+                    row[col] = employee.designation.title if employee.designation else ''
                 elif col == 'hire_date':
-                    row[col] = employee.hire_date.isoformat() if employee.hire_date else ''
+                    row[col] = employee.date_of_joining.isoformat() if employee.date_of_joining else ''
                 elif col == 'status':
-                    row[col] = employee.status
+                    row[col] = employee.is_active
                 else:
                     row[col] = getattr(employee, col, '')
             data.append(row)

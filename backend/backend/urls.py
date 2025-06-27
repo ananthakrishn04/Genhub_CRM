@@ -35,7 +35,7 @@ urlpatterns = [
     path('api/leave/', include('leave.urls')),
     path('api/documents/', include('documents.urls')),
     path('api/boarding/', include('boarding.urls')),
-    # path('api/analytics/', include('analytics.urls')),
+    path('api/analytics/', include('analytics.urls'))
 ]
 
 # Serve media files in development

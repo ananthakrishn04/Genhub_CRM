@@ -11,5 +11,5 @@ router.register(r'hr-metrics', HRMetricViewSet)
 app_name = 'analytics'
 
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]

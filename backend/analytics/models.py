@@ -5,6 +5,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import json
 
+from employees.models import Employee
+
 
 class Report(models.Model):
     REPORT_TYPES = [
@@ -33,7 +35,7 @@ class Report(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     report_type = models.CharField(max_length=50, choices=REPORT_TYPES)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_reports')
+    created_by = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='created_reports')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -44,11 +46,11 @@ class Report(models.Model):
     
     # Configuration
     filters = models.JSONField(default=dict, help_text="Filters applied to the report")
-    columns = models.JSONField(default=list, help_text="Columns to include in the report")
+    columns = models.JSONField(default=list, null=True, blank=True, help_text="Columns to include in the report")
     format = models.CharField(max_length=10, choices=FORMAT_CHOICES, default='pdf')
     
     # Recipients for scheduled reports
-    email_recipients = models.JSONField(default=list, help_text="Email addresses to send scheduled reports")
+    email_recipients = models.JSONField(default=list, null=True, blank=True, help_text="Email addresses to send scheduled reports")
     
     is_active = models.BooleanField(default=True)
     
@@ -68,7 +70,7 @@ class ReportExecution(models.Model):
     ]
     
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='executions')
-    executed_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    executed_by = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -109,7 +111,7 @@ class Certificate(models.Model):
         ('pending_renewal', 'Pending Renewal'),
     ]
     
-    employee = models.ForeignKey('employees.Employee', on_delete=models.CASCADE, related_name='certificates')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='certificates')
     name = models.CharField(max_length=200)
     certificate_type = models.CharField(max_length=50, choices=CERTIFICATE_TYPES)
     issuing_authority = models.CharField(max_length=200)
@@ -142,15 +144,18 @@ class Certificate(models.Model):
     
     @property
     def days_until_expiry(self):
-        return (self.expiry_date - timezone.now().date()).days
+        if self.expiry_date:
+            return (self.expiry_date - timezone.now().date()).days
     
     @property
     def is_expired(self):
-        return self.expiry_date < timezone.now().date()
+        if self.expiry_date:
+            return self.expiry_date < timezone.now().date()
     
     @property
     def is_expiring_soon(self):
-        return 0 <= self.days_until_expiry <= self.reminder_days_before
+        if self.expiry_date:
+            return 0 <= self.days_until_expiry <= self.reminder_days_before
     
     def update_status(self):
         if self.is_expired:

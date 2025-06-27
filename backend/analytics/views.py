@@ -30,7 +30,7 @@ class ReportViewSet(viewsets.ModelViewSet):
         # Create execution record
         execution = ReportExecution.objects.create(
             report=report,
-            executed_by=request.user,
+            executed_by=request.user.employee_profile,
             status='pending'
         )
         

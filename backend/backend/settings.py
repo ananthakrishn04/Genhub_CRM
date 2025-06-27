@@ -150,3 +150,25 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True
     # OTHER SETTINGS
 }
+
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # For Redis
+# OR
+# CELERY_BROKER_URL = 'amqp://guest@localhost//'  # For RabbitMQ
+
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # For Redis
+# OR
+# CELERY_RESULT_BACKEND = 'rpc://'  # For RabbitMQ
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'  # or your timezone like 'Asia/Kolkata'
+
+# Optional: Task result expiration time
+CELERY_RESULT_EXPIRES = 3600
+
+
+# Optional: For development - makes tasks run synchronously
+CELERY_TASK_ALWAYS_EAGER = True  # Only for development/testing
