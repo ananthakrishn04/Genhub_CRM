@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, EmployeeEducation, EmployeeExperience, EmployeeSkill, EmployeeTimeline, Department, Designation
+from .models import Employee, EmployeeEducation, EmployeeExperience, EmployeeSkill, EmployeeTimeline, Department, Designation, EmployeeAttendance, TaskTimeLog
 
 # Register your models here.
 
@@ -13,3 +13,5 @@ admin.site.register(EmployeeSkill)
 admin.site.register(EmployeeTimeline)
 admin.site.register(Department)
 admin.site.register(Designation)
+admin.site.register(EmployeeAttendance)
+admin.site.register(TaskTimeLog)

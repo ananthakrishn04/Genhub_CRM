@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'documents',
     'boarding',
     'analytics',
+    'emsAdmin',
 ]
 
 MIDDLEWARE = [

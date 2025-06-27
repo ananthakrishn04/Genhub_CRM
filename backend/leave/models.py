@@ -64,7 +64,7 @@ class LeaveBalance(models.Model):
         unique_together = ('employee', 'leave_type', 'year')
 
 class LeaveRequest(models.Model):
-    STATUS_CHOICES = (
+    LEAVE_REQUEST_STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
@@ -78,7 +78,7 @@ class LeaveRequest(models.Model):
     half_day = models.BooleanField(default=False)
     half_day_type = models.CharField(max_length=10, choices=[('FIRST', 'First Half'), ('SECOND', 'Second Half')], null=True, blank=True)
     reason = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=LEAVE_REQUEST_STATUS_CHOICES, default='PENDING')
     approved_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_leaves')
     approved_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(null=True, blank=True)
