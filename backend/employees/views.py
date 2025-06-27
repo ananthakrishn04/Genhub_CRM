@@ -331,27 +331,26 @@ class LoginView(APIView):
 
         user = serializer.validated_data
 
-
         if user is not None:
             try:
                 employee = user.employee_profile
                 employee_id = str(employee.employee_id)
+
+                refresh = RefreshToken.for_user(user)
+
+                # Determine roleel
+                if user.groups.exists():
+                    role = user.groups.first().name
+                else:
+                    role = 'employee'
+
+                return Response({
+                    'access_token': str(refresh.access_token),
+                    'refresh_token': str(refresh),
+                    'employee_id': employee_id,
+                    'role': role,
+                })
             except Exception:
-                employee_id = None
-            refresh = RefreshToken.for_user(user)
-            # Determine role
-            if user.is_superuser:
-                role = 'admin'
-            elif user.is_staff:
-                role = 'staff'
-            elif user.groups.exists():
-                role = user.groups.first().name
-            else:
-                role = 'employee'
-            return Response({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'employee_id': employee_id,
-                'role': role,
-            })
+                return Response({'detail': "Access denied. Please use the appropriate login endpoint."}, status=status.HTTP_403_FORBIDDEN)
+        
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

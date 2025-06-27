@@ -15,7 +15,7 @@ class ProcessTemplate(models.Model):
     description = models.TextField(blank=True, null=True)
     departments = models.ManyToManyField(Department, related_name='process_templates', blank=True)
     is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_process_templates')
+    created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='created_process_templates')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -63,7 +63,7 @@ class Process(models.Model):
         ('offboarding', 'Offboarding'),
     )
     
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='processes')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='employee_processes')
     process_template = models.ForeignKey(ProcessTemplate, on_delete=models.SET_NULL, null=True, related_name='processes')
     process_type = models.CharField(max_length=20, choices=PROCESS_TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=PROCESS_STATUS_CHOICES, default='planned')
@@ -71,7 +71,7 @@ class Process(models.Model):
     target_completion_date = models.DateField(null=True, blank=True)
     actual_completion_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_processes')
+    created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='created_processes')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -81,15 +81,6 @@ class Process(models.Model):
     
     def __str__(self):
         return f"{self.get_process_type_display()} for {self.employee.full_name}"
-    
-    @property
-    def completion_percentage(self):
-        tasks = self.tasks.all()
-        if not tasks:
-            return 0
-        
-        completed_tasks = tasks.filter(status='completed').count()
-        return int((completed_tasks / tasks.count()) * 100)
 
 
 class Task(models.Model):
@@ -108,12 +99,12 @@ class Task(models.Model):
         ('critical', 'Critical'),
     )
     
-    process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name='tasks')
+    process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name='process_tasks', null=True, blank=True)
     task_template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='tasks')
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks')
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='task_departments')
+    assignee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks')
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='not_started')
     priority = models.CharField(max_length=10, choices=TASK_PRIORITY_CHOICES, default='medium')
@@ -121,14 +112,14 @@ class Task(models.Model):
     order = models.PositiveIntegerField(default=0)
     completion_date = models.DateField(null=True, blank=True)
     completion_notes = models.TextField(blank=True, null=True)
-    completed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='completed_tasks')
+    completed_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='completed_tasks')
     depends_on = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='dependent_tasks')
     
     class Meta:
         ordering = ['order', 'due_date']
     
     def __str__(self):
-        return f"{self.name} - {self.process.employee.full_name}"
+        return f"{self.name} - {self.assignee.full_name}"
 
 
 class Equipment(models.Model):
@@ -167,14 +158,14 @@ class Equipment(models.Model):
 
 class EquipmentAssignment(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='assignments')
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='equipment_assignments')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='equipment_assigned_to')
     assigned_date = models.DateField()
     expected_return_date = models.DateField(null=True, blank=True)
     actual_return_date = models.DateField(null=True, blank=True)
     condition_on_assignment = models.TextField(blank=True, null=True)
     condition_on_return = models.TextField(blank=True, null=True)
-    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='equipment_assignments')
-    received_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='equipment_returns')
+    assigned_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='equipment_assigned_by')
+    received_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='equipment_returns')
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
