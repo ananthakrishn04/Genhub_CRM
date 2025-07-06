@@ -25,8 +25,13 @@ SECRET_KEY = 'django-insecure-%y^o_5694lru6b%z2act%%j)nh(ydq$_6tu8d$5&nf+9#(kglv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*','127.0.0.1']
 
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
 
 # Application definition
 
@@ -140,6 +145,14 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Example: Access token valid for 60 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Example: Refresh token valid for 7 days
+    # ... other Simple JWT settings
 }
 
 SPECTACULAR_SETTINGS = {

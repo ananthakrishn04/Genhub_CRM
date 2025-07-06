@@ -46,10 +46,11 @@ class LeaveBalanceViewSet(viewsets.ModelViewSet):
         year = request.query_params.get('year', datetime.now().year)
         
         if not employee_id:
-            return Response({"error": "Employee ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            # return Response({"error": "Employee ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            employee_id = request.user.employee_profile.employee_id
         
         try:
-            employee = Employee.objects.get(id=employee_id)
+            employee = Employee.objects.get(employee_id=employee_id)
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -78,11 +79,14 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     def my_leaves(self, request):
         employee_id = request.query_params.get('employee_id')
         
+        
         if not employee_id:
-            return Response({"error": "Employee ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            # return Response({"error": "Employee ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            employee_id = request.user.employee_profile.employee_id
         
         try:
-            employee = Employee.objects.get(id=employee_id)
+            employee = Employee.objects.get(employee_id=employee_id)
+            
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -113,7 +117,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
             return Response({"error": "Manager ID is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            manager = Employee.objects.get(id=manager_id)
+            manager = Employee.objects.get(employee_id=manager_id)
         except Employee.DoesNotExist:
             return Response({"error": "Manager not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -136,10 +140,11 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         end_date = request.query_params.get('end_date', (timezone.now().date().replace(day=1) + timedelta(days=31)).replace(day=1).isoformat())
         
         if not manager_id:
-            return Response({"error": "Manager ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            # return Response({"error": "Manager ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            manager_id = request.user.employee_profile.employee_id
         
         try:
-            manager = Employee.objects.get(id=manager_id)
+            manager = Employee.objects.get(employee_id=manager_id)
         except Employee.DoesNotExist:
             return Response({"error": "Manager not found"}, status=status.HTTP_404_NOT_FOUND)
         
@@ -165,11 +170,15 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         employee_id = request.data.get('employee')
         comment = request.data.get('comment')
         
-        if not employee_id or not comment:
-            return Response({"error": "Employee ID and comment are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not employee_id:
+            # return Response({"error": "Employee ID and comment are required"}, status=status.HTTP_400_BAD_REQUEST)
+            employee_id = request.user.employee_profile.employee_id
+        
+        if not comment:
+            return Response({"error": "Comment is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            employee = Employee.objects.get(id=employee_id)
+            employee = Employee.objects.get(employee_id=employee_id)
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found"}, status=status.HTTP_404_NOT_FOUND)
         
