@@ -46,7 +46,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def get_assignee_name(self, obj):
-        return obj.assignee.get_full_name() if obj.assignee else None
+        return obj.assignee.full_name if obj.assignee else None
     
     def get_dependencies(self, obj):
         return [{'id': task.id, 'name': task.name} for task in obj.depends_on.all()]
