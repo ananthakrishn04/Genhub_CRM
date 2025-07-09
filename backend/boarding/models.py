@@ -104,7 +104,7 @@ class Task(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='task_departments')
-    assignee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks')
+    assignee = models.ForeignKey(Employee, on_delete=models.SET_NULL, related_name='assigned_tasks', null=True)
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='not_started')
     priority = models.CharField(max_length=10, choices=TASK_PRIORITY_CHOICES, default='medium')
