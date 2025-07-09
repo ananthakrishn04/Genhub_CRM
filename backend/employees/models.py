@@ -78,6 +78,12 @@ class Employee(models.Model):
     date_of_joining = models.DateField()
     employment_status = models.CharField(max_length=20, default='Active')  # Active, Probation, Terminated, etc.
     employment_type = models.CharField(max_length=20, default='Full-time')  # Full-time, Part-time, Contract, etc.
+
+    # Bank information
+    bank_name = models.CharField(max_length=100, null=True, blank=True)
+    account_number = models.CharField(max_length=20, null=True, blank=True)
+    branch_name = models.CharField(max_length=100, null=True, blank=True)
+    ifsc_code = models.CharField(max_length=11, null=True, blank=True)
     
     # Other Information
     skills = models.TextField(null=True, blank=True)
