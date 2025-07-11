@@ -79,6 +79,16 @@ class LeaveRequestUpdateSerializer(serializers.ModelSerializer):
         if data.get('status') == 'REJECTED' and not data.get('rejection_reason'):
             raise serializers.ValidationError({'rejection_reason': 'Rejection reason is required when rejecting a leave request'})
         return data
+    
+    def update(self, instance, validated_data):
+        # Apply each field in validated_data to the instance
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Now save to trigger LeaveRequest.save(), which handles balance updates
+        instance.save()
+
+        return instance
 
 class HolidaySerializer(serializers.ModelSerializer):
     class Meta:

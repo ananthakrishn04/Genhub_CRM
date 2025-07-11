@@ -195,7 +195,3 @@ CELERY_TIMEZONE = 'UTC'  # or your timezone like 'Asia/Kolkata'
 
 # Optional: Task result expiration time
 CELERY_RESULT_EXPIRES = 3600
-
-
-# Optional: For development - makes tasks run synchronously
-CELERY_TASK_ALWAYS_EAGER = True  # Only for development/testing
